@@ -9,10 +9,18 @@ import com.google.common.eventbus.Subscribe;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Implements the UTC shift commands.
+ */
 @CommandModule
 public class UTCOffset extends Command {
     private static final String UTC_REGEX = "^UTC([+\\-])(\\d+)$";
 
+    /**
+     * Standard UTCOffset command constructor. Requires the current command processor instance.
+     *
+     * @param processor the command processor to be used.
+     */
     public UTCOffset(ServerStateCommandProcessor processor) {
         super(processor);
     }
@@ -37,7 +45,7 @@ public class UTCOffset extends Command {
     }
 
     @Subscribe
-    private static void register(ServerStateCommandProcessor processor){
+    private static void register(ServerStateCommandProcessor processor) {
         processor.registerConfig("UTC", UTCOffset.class);
     }
 }

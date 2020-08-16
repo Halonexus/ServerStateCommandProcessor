@@ -7,11 +7,16 @@ import com.dmitry.baranovsky.serverstatecommandprocessor.ServerStateCommandProce
 import com.google.common.eventbus.Subscribe;
 
 /**
- * Manual command that returns IGNORE_TIME
+ * Implements the [Manual] command that returns IGNORE_TIME.
  */
 @CommandModule
 public class IgnoreTimeCommand extends Command {
 
+    /**
+     * Standard IgnoreTimeCommand constructor. Requires the current command processor instance.
+     *
+     * @param processor the command processor to be used.
+     */
     public IgnoreTimeCommand(ServerStateCommandProcessor processor) {
         super(processor);
     }
@@ -26,7 +31,7 @@ public class IgnoreTimeCommand extends Command {
     }
 
     @Subscribe
-    private static void register(ServerStateCommandProcessor processor){
+    private static void register(ServerStateCommandProcessor processor) {
         processor.register("Manual", IgnoreTimeCommand.class);
     }
 }

@@ -10,7 +10,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A class of commands that have days and time periods as arguments
+ * A class for commands that have days and time periods as arguments.
+ * E.g. [Mon-Fri 14:00-17:00].
  */
 @CommandModule
 public class DateTimeCommand extends Command {
@@ -19,6 +20,9 @@ public class DateTimeCommand extends Command {
     private boolean isStart = false;
     private boolean isEnd = false;
     private static final String ARGUMENT_SPLIT_PATTERN = "\\s+";
+    /**
+     * A map that links DayOfWeek enums to day of week names used in commands.
+     */
     public static final Map<String, DayOfWeek> DAYS = new HashMap<>();
     private static final String TIME_REGEX =
             "^([0-9]|0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])-([0-9]|0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])$";
@@ -33,6 +37,11 @@ public class DateTimeCommand extends Command {
         DAYS.put("Sun", DayOfWeek.SUNDAY);
     }
 
+    /**
+     * Standard DateTimeCommand constructor. Requires the current command processor instance.
+     *
+     * @param processor the command processor to be used.
+     */
     public DateTimeCommand(ServerStateCommandProcessor processor) {
         super(processor);
     }

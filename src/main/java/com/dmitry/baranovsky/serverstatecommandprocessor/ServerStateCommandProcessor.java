@@ -6,7 +6,8 @@ import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfo;
 import lombok.Getter;
 import lombok.Setter;
-import org.json.JSONObject;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.lang.annotation.Annotation;
 import java.time.DateTimeException;
@@ -21,10 +22,13 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * A class that processes the work time commands to determine if the server needs to be started or stopped
+ * Class for processing the work time commands.
+ * <p>
+ * Registers all commands and then processes given work time strings.
  */
+@SpringBootApplication
+@SuppressWarnings("UnstableApiUsage")
 public class ServerStateCommandProcessor {
-
     private static final String COMMAND_PACKAGE = "com.dmitry.baranovsky.serverstatecommandprocessor.commands";
     private static final String COMMAND_SPLIT_PATTERN = "]";
     private static final String ARGUMENT_SPLIT_PATTERN = "[\\s+,-]";
@@ -51,18 +55,14 @@ public class ServerStateCommandProcessor {
     private String workTime;
     private String error;
 
-    public void register(String key, Class<?> commandType) {
-        PRIMARY_MAP.put(key, commandType);
-    }
-
-    public void registerConfig(String key, Class<?> commandType) {
-        CONFIG_MAP.put(key, commandType);
-    }
-
     public boolean isRunning() {
         return isRunning;
     }
 
+    /**
+     * The command processor constructor.
+     * Registers all commands.
+     */
     public ServerStateCommandProcessor() {
         Set<Class<?>> commands = lookForAnnotatedOn(CommandModule.class);
         EventBus eventBus = new EventBus();
@@ -70,10 +70,30 @@ public class ServerStateCommandProcessor {
             try {
                 eventBus.register(aClass.getDeclaredConstructor(ServerStateCommandProcessor.class).newInstance(this));
             } catch (Exception e) {
-                error = "Couldnt find public constructor for command class: " + aClass.getName();
+                error = "Couldn't find public constructor for command class: " + aClass.getName();
             }
         }
         eventBus.post(this);
+    }
+
+    /**
+     * Registers a timetable command in this processor.
+     *
+     * @param key         the command key as seen in work time strings.
+     * @param commandType the command implementation class.
+     */
+    public void register(String key, Class<?> commandType) {
+        PRIMARY_MAP.put(key, commandType);
+    }
+
+    /**
+     * Registers a configuration command in this processor.
+     *
+     * @param key         the command key as seen in work time strings.
+     * @param commandType the command implementation class.
+     */
+    public void registerConfig(String key, Class<?> commandType) {
+        CONFIG_MAP.put(key, commandType);
     }
 
     private Set<Class<?>> lookForAnnotatedOn(Class<? extends Annotation> annotation) {
@@ -85,13 +105,16 @@ public class ServerStateCommandProcessor {
                 .collect(Collectors.toSet());
     }
 
+    public static void main(String[] args) {
+        SpringApplication.run(ServerStateCommandProcessor.class, args);
+    }
 
     /**
-     * Analyses the given workTime String using real current time of timeZone
+     * Processes the given workTime String using provided time arguments.
      *
-     * @return JSON String
+     * @return the JSON represented as a Map<\String, String>.
      */
-    public String run(String inputJSON) {
+    public Map<String, String> run(Map<String, String> inputJSON) {
         //reading input
         if (!readInput(inputJSON)) {
             return returnJSONString(error);
@@ -105,18 +128,16 @@ public class ServerStateCommandProcessor {
         return calculateResult(result);
     }
 
-    private boolean readInput(String inputJSON) {
-        JSONObject input = new JSONObject(inputJSON);
-        String workTime = input.getString("Work Hours");
-        String currentTime = input.getString("Current Time");
-        String launchTime = input.getString("Launch Time");
-        String timeZone = input.getString("Time Zone");
-        String serverState = input.getString("Server State");
-        String patchTime = input.getString("Patch Time");
+    private boolean readInput(Map<String, String> input) {
+        String workTime = input.get("Work Hours");
+        String currentTime = input.get("Current Time");
+        String launchTime = input.get("Launch Time");
+        String timeZone = input.get("Time Zone");
+        String serverState = input.get("Server State");
+        String patchTime = input.get("Patch Time");
 
         if (workTime.isEmpty() || launchTime.isEmpty() || timeZone.isEmpty() || serverState.isEmpty()) {
             error = "Null argument";
-            //return returnJSONString("Null argument");
             return false;
         }
         this.workTime = workTime;
@@ -125,12 +146,10 @@ public class ServerStateCommandProcessor {
         } catch (Exception e) {
             error = "Incorrect time zone:" + timeZone;
             return false;
-            //return returnJSONString("Incorrect time zone:" + timeZone);
         }
         if (!Pattern.matches(SERVER_STATE_REGEX, serverState)) {
             error = "Incorrect server state";
             return false;
-            //return returnJSONString("Incorrect server state");
         } else {
             Matcher matcher = Pattern.compile(SERVER_STATE_REGEX).matcher(serverState);
             if (matcher.matches()) {
@@ -140,13 +159,11 @@ public class ServerStateCommandProcessor {
         if (!Pattern.matches(PATCH_TIME_REGEX, patchTime) && !patchTime.isEmpty()) {
             error = "Incorrect patch time";
             return false;
-            //return returnJSONString("Incorrect patch time");
         }
         this.patchTime = patchTime;
         if (!Pattern.matches(TIME_REGEX, launchTime)) {
             error = "Incorrect launch time: " + launchTime;
             return false;
-            //return returnJSONString("Incorrect launch time: " + launchTime);
         } else {
             Matcher matcher = Pattern.compile(TIME_REGEX).matcher(launchTime);
             if (matcher.matches()) {
@@ -160,14 +177,12 @@ public class ServerStateCommandProcessor {
                 } catch (DateTimeException e) {
                     error = "Incorrect launch time: " + launchTime;
                     return false;
-                    //return returnJSONString("Incorrect launch time: " + launchTime);
                 }
             }
         }
         if (!Pattern.matches(TIME_REGEX, currentTime)) {
             error = "Incorrect current time: " + currentTime;
             return false;
-            //return returnJSONString("Incorrect current time: " + currentTime);
         } else {
             Matcher matcher = Pattern.compile(TIME_REGEX).matcher(currentTime);//need to check date
             if (matcher.matches()) {
@@ -181,14 +196,12 @@ public class ServerStateCommandProcessor {
                 } catch (DateTimeException e) {
                     error = "Incorrect current time: " + currentTime;
                     return false;
-                    //return returnJSONString("Incorrect current time: " + currentTime);
                 }
             }
         }
         if (currentDateTime == null || localTimeZone == null) {
             error = "Null main arguments";
             return false;
-            //return returnJSONString("Null main arguments");
         }
         localDateTime = currentDateTime.withZoneSameInstant(localTimeZone);
         if (localTimeZone.getRules().isDaylightSavings(currentDateTime.toInstant())) {
@@ -203,7 +216,6 @@ public class ServerStateCommandProcessor {
             if (!commands[i].startsWith("[")) {
                 error = "No '[' found at command origin: " + workTime;
                 return null;
-                //return returnJSONString("No '[' found at command origin: " + workTime);
             }
             String[] command = Utilities.splitArguments(commands[i], ARGUMENT_SPLIT_PATTERN);
             String key = command[0].substring(1);
@@ -215,14 +227,11 @@ public class ServerStateCommandProcessor {
                     if (result.getAction() == Action.ERROR) {
                         error = result.getError();
                         return null;
-                        //return returnJSONString(result.getError());
                     }
                 } catch (Exception e) {
                     error = "Command instantiation error for command: "
                             + CONFIG_MAP.get(key).getCanonicalName();
                     return null;
-                    //return returnJSONString("Command instantiation error for command: "
-                    //        + CONFIG_MAP.get(key).getCanonicalName());
                 }
                 commands[i] = null;
             }
@@ -239,7 +248,6 @@ public class ServerStateCommandProcessor {
             if (!PRIMARY_MAP.containsKey(key)) {
                 error = "Illegal command: " + key;
                 return null;
-                //return returnJSONString("Illegal command: " + key);
             }
             try {
                 result[i] = ((Command) PRIMARY_MAP.get(key).getConstructor(ServerStateCommandProcessor.class)
@@ -247,20 +255,17 @@ public class ServerStateCommandProcessor {
                 if (result[i].getAction() == Action.ERROR) {
                     error = result[i].getError();
                     return null;
-                    //return returnJSONString(result[i].getError());
                 }
             } catch (Exception e) {
                 error = "Command instantiation error for command: "
                         + PRIMARY_MAP.get(key).getCanonicalName();
                 return null;
-                //return returnJSONString("Command instantiation error for command: "
-                //       + PRIMARY_MAP.get(key).getCanonicalName());
             }
         }
         return result;
     }
 
-    private String calculateResult(Result[] result) {
+    private Map<String, String> calculateResult(Result[] result) {
         boolean ignoreAll = false;
         boolean ignoreTime = false;
         boolean isWorkTime = false;
@@ -360,7 +365,7 @@ public class ServerStateCommandProcessor {
     }
 
     /**
-     * Possible command results and errors
+     * Possible command results and errors.
      */
     public enum Action {
         ON("Start"),
@@ -379,24 +384,24 @@ public class ServerStateCommandProcessor {
         }
     }
 
-    private String returnJSONString(String error) {
-        JSONObject json = new JSONObject();
-        json.put("Action", "");
-        json.put("Reason", "");
-        json.put("ErrorFlag", "True");
-        json.put("ErrorMessage", error);
-        json.put("LocalTime", formatLocalTime());
-        return json.toString();
+    private Map<String, String> returnJSONString(String error) {
+        Map<String, String> outJSON = new HashMap<>();
+        outJSON.put("Action", "");
+        outJSON.put("Reason", "");
+        outJSON.put("ErrorFlag", "True");
+        outJSON.put("ErrorMessage", error);
+        outJSON.put("LocalTime", formatLocalTime());
+        return outJSON;
     }
 
-    private String returnJSONString(Action action, String reason) {
-        JSONObject json = new JSONObject();
-        json.put("Action", action.name);
-        json.put("Reason", reason);
-        json.put("ErrorFlag", "False");
-        json.put("ErrorMessage", "");
-        json.put("LocalTime", formatLocalTime());
-        return json.toString();
+    private Map<String, String> returnJSONString(Action action, String reason) {
+        Map<String, String> outJSON = new HashMap<>();
+        outJSON.put("Action", action.name);
+        outJSON.put("Reason", reason);
+        outJSON.put("ErrorFlag", "False");
+        outJSON.put("ErrorMessage", "");
+        outJSON.put("LocalTime", formatLocalTime());
+        return outJSON;
     }
 
     private String formatLocalTime() {

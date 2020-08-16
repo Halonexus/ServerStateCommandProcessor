@@ -1,0 +1,5 @@
+{
+  "connectionUrl": "jdbc:mysql://172.17.0.3:3306/users?serverTimezone=UTC",
+  "mySQLUser": "testUser",
+  "mySQLPassword": "testPassword"
+}

@@ -10,12 +10,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * UOD command that returns OFF when the current time is the same as the specified time
+ * Implements the [UOD] command that returns OFF when the current time is the same as the specified time.
  */
 @CommandModule
 public class UpOnDemandCommand extends Command {
     private static final String UOD_REGEX = "^UOD ([0-9]|0[0-9]|1[0-9]|2[0-3]):([0-5][0-9])$";
 
+    /**
+     * Standard UpOnDemandCommand constructor. Requires the current command processor instance.
+     *
+     * @param processor the command processor to be used.
+     */
     public UpOnDemandCommand(ServerStateCommandProcessor processor) {
         super(processor);
     }
@@ -40,7 +45,7 @@ public class UpOnDemandCommand extends Command {
     }
 
     @Subscribe
-    private static void register(ServerStateCommandProcessor processor){
+    private static void register(ServerStateCommandProcessor processor) {
         processor.register("UOD", UpOnDemandCommand.class);
     }
 }

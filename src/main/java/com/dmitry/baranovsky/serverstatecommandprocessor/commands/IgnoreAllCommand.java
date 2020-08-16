@@ -7,11 +7,16 @@ import com.dmitry.baranovsky.serverstatecommandprocessor.ServerStateCommandProce
 import com.google.common.eventbus.Subscribe;
 
 /**
- * OFF command that returns IGNORE_ALL
+ * Implements the [OFF] command that returns IGNORE_ALL.
  */
 @CommandModule
 public class IgnoreAllCommand extends Command {
 
+    /**
+     * Standard IgnoreAllCommand constructor. Requires the current command processor instance.
+     *
+     * @param processor the command processor to be used.
+     */
     public IgnoreAllCommand(ServerStateCommandProcessor processor) {
         super(processor);
     }
@@ -25,7 +30,7 @@ public class IgnoreAllCommand extends Command {
     }
 
     @Subscribe
-    private static void register(ServerStateCommandProcessor processor){
+    private static void register(ServerStateCommandProcessor processor) {
         processor.register("OFF", IgnoreAllCommand.class);
     }
 }

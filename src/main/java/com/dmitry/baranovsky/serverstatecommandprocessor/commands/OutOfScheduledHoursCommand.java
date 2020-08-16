@@ -10,12 +10,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * OSH command. Returns OFF when a given amount of hours passes after launchTime
+ * Implements the [OSH] command. Returns OFF when a given amount of hours passes after launchTime.
  */
 @CommandModule
 public class OutOfScheduledHoursCommand extends Command {
     private static final String OSH_REGEX = "^OSH ([0-9])$";
 
+    /**
+     * Standard OutOfScheduledHoursCommand constructor. Requires the current command processor instance.
+     *
+     * @param processor the command processor to be used.
+     */
     public OutOfScheduledHoursCommand(ServerStateCommandProcessor processor) {
         super(processor);
     }
@@ -41,7 +46,7 @@ public class OutOfScheduledHoursCommand extends Command {
     }
 
     @Subscribe
-    private static void register(ServerStateCommandProcessor processor){
+    private static void register(ServerStateCommandProcessor processor) {
         processor.register("OSH", OutOfScheduledHoursCommand.class);
     }
 }

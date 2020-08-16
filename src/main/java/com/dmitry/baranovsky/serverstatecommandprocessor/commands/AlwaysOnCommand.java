@@ -7,11 +7,17 @@ import com.dmitry.baranovsky.serverstatecommandprocessor.ServerStateCommandProce
 import com.google.common.eventbus.Subscribe;
 
 /**
- * The command that always returns ON
+ * Implementation of the [24h] command.
+ * Always returns ON.
  */
 @CommandModule
 public class AlwaysOnCommand extends Command {
 
+    /**
+     * Standard AlwaysOnCommand constructor. Requires the current command processor instance.
+     *
+     * @param processor the command processor to be used.
+     */
     public AlwaysOnCommand(ServerStateCommandProcessor processor) {
         super(processor);
     }
@@ -30,7 +36,7 @@ public class AlwaysOnCommand extends Command {
     }
 
     @Subscribe
-    public static void register(ServerStateCommandProcessor processor){
+    private static void register(ServerStateCommandProcessor processor) {
         processor.register("24h", AlwaysOnCommand.class);
     }
 }

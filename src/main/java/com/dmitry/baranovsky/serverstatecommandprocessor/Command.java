@@ -7,9 +7,10 @@ package com.dmitry.baranovsky.serverstatecommandprocessor;
 public abstract class Command {
     protected final ServerStateCommandProcessor processor;
 
-    public Command(ServerStateCommandProcessor processor){
+    public Command(ServerStateCommandProcessor processor) {
         this.processor = processor;
     }
+
     /**
      * Executes the command checking its arguments
      *
